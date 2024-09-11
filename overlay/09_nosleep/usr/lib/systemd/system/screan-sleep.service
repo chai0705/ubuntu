@@ -1,0 +1,6 @@
+[Unit]
+Description=Screan not sleep 
+[Service]
+ExecStart=/usr/bin/screan-sleep.sh
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# 获取设备的 BOARD 值
+BOARD=$(cat /proc/device-tree/compatible | tail -c 7 | head -c 6)
+
+# 睡眠两秒钟
+sleep 2
+
+# 根据 BOARD 值执行相应的命令
+if [ "$BOARD" == "rk3588" ]; then
+    # 针对 rk3588 的命令
+    toilet -f standard -F metal $(echo iTOP-RK3588)
+    echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor
+    echo performance > /sys/devices/system/cpu/cpufreq/policy4/scaling_governor
+    echo performance > /sys/devices/system/cpu/cpufreq/policy6/scaling_governor
+    echo performance > /sys/devices/platform/fb000000.gpu/devfreq/fb000000.gpu/governor
+
+elif [ "$BOARD" == "rk3568" ]; then
+    # 针对 rk3568 的命令
+    toilet -f standard -F metal $(echo iTOP-RK3568)
+    echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor
+    echo performance > /sys/devices/platform/fde60000.gpu/devfreq/fde60000.gpu/governor
+
+elif [ "$BOARD" == "rk3562" ]; then
+    # 针对 rk3562 的命令
+    toilet -f standard -F metal $(echo iTOP-RK3562)
+    echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor
+    echo performance > /sys/devices/platform/ff320000.gpu/devfreq/ff320000.gpu/governor
+
+else
+    echo "未知的 BOARD 值: $BOARD"
+fi
+

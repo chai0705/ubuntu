@@ -1,0 +1,7 @@
+binary/
+*.tar.gz
+*.img
+rootfs/
+*.7z
+*.xz
+chromium-x11_91.0.4472.164_arm64.deb
