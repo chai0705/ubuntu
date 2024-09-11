@@ -5,7 +5,7 @@ set -e -o pipefail
 
 # 检查并尝试获取 root 权限。如果当前用户不是 root，提示并重新执行脚本。
 if [[ "${EUID}" != "0" ]]; then
-    echo -e "\033[42;36m 该脚本需要 root 权限，正在尝试使用 sudo 重新运行 \033[0m"
+    echo -e "\033[42;36m 该脚本需要 root 权限，请切换为root用户或者使用sudo权限运行 \033[0m"
     exit $?
 fi
 
@@ -188,8 +188,8 @@ cat << EOF | chroot $TARGET_ROOTFS_DIR
     echo "alias ls='ls --color=auto'" >> /home/topeet/.bashrc
     echo "export LS_COLORS='rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'" >>  /home/topeet/.bashrc
 
-    # 设置终端自动登录
-    serial_autologin.sh enable
+    # 设置终端不自动登录
+    serial_autologin.sh disable
 
     # 设置SSH 允许root登录
     sudo sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
@@ -218,13 +218,13 @@ cat << EOF | chroot $TARGET_ROOTFS_DIR
     export DEBIAN_FRONTEND=noninteractive
     export APT_INSTALL="apt-get install -fy --allow-downgrades"
     
-    \${APT_INSTALL} u-boot-tools edid-decode logrotate nfs-kernel-server
+    \${APT_INSTALL} u-boot-tools edid-decode logrotate
     if [[ "$TARGET" == "gnome" ]]; then
         \${APT_INSTALL} gdisk blueman
 	apt purge -y gnome-initial-setup
     elif [[ "$TARGET" == "xfce" ]]; then
-        apt-get remove -y gnome-bluetooth
-        \${APT_INSTALL} bluez bluez-tools blueman
+        apt-get remove -y gnome-bluetooth 
+        \${APT_INSTALL} bluez bluez-tools blueman pulseaudio
     elif [ "$TARGET" == "lite" ];then
         \${APT_INSTALL} bluez bluez-tools blueman
     fi
@@ -235,6 +235,7 @@ cat << EOF | chroot $TARGET_ROOTFS_DIR
     # 安装在 packages 目录中的驱动包和内核包
     \${APT_INSTALL} /packages/install_packages/*.deb
     \${APT_INSTALL} /boot/kerneldeb/* || true
+    rm -rf /*deb
 
     # 选择对应soc的xml文件
     cp /etc/iqfiles/$SOC/* /etc/iqfiles/
@@ -244,7 +245,6 @@ cat << EOF | chroot $TARGET_ROOTFS_DIR
     echo -e "\033[42;36m ----- power management ----- \033[0m"
     \${APT_INSTALL} pm-utils triggerhappy bsdmainutils
     cp /etc/Powermanager/triggerhappy.service  /lib/systemd/system/triggerhappy.service
-    sed -i "s/#HandlePowerKey=.*/HandlePowerKey=ignore/" /etc/systemd/logind.conf
 
     # 安装 RGA 驱动
     echo -e "\033[42;36m ----------- RGA  ----------- \033[0m"
@@ -252,9 +252,9 @@ cat << EOF | chroot $TARGET_ROOTFS_DIR
 
     # 配置视频相关的工具和插件，安装 MPP（多媒体处理）和 GStreamer 插件
     echo -e "\033[42;36m ------ Setup Video---------- \033[0m"
+    \${APT_INSTALL} gstreamer1.0-plugins-bad gstreamer1.0-plugins-base gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-plugins-base-apps qtmultimedia5-examples
     \${APT_INSTALL} /packages/mpp/*
     \${APT_INSTALL} /packages/gst-rkmpp/*.deb
-    \${APT_INSTALL} /packages/gstreamer/*.deb
 
     # 安装和配置摄像头相关的工具
     echo -e "\033[42;36m ----- Install Camera ----- - \033[0m"
@@ -290,9 +290,13 @@ cat << EOF | chroot $TARGET_ROOTFS_DIR
     echo -e "\033[42;36m ------- Install libdrm ------ \033[0m"
     \${APT_INSTALL} /packages/libdrm/*.deb
 
-    # 安装 libdrm-cursor
-    echo -e "\033[42;36m ------ libdrm-cursor -------- \033[0m"
-    \${APT_INSTALL} /packages/libdrm-cursor/*.deb
+    if [[ "$TARGET" == "gnome" ||  "$TARGET" == "xfce" ]]; then
+        echo -e "\033[47;36m ------ libdrm-cursor -------- \033[0m"
+        \${APT_INSTALL} /packages/libdrm-cursor/*.deb
+        # Only preload libdrm-cursor for X
+        sed -i "/libdrm-cursor.so/d" /etc/ld.so.preload
+        sed -i "1aexport LD_PRELOAD=libdrm-cursor.so.1" /usr/bin/X
+    fi
 
     # 安装 glmark2 用于图形性能测试
     echo -e "\033[42;36m ------ Install glmark2 ------ \033[0m"
@@ -307,16 +311,6 @@ cat << EOF | chroot $TARGET_ROOTFS_DIR
     # 安装 Rockchip 工具包
     echo -e "\033[42;36m ----- Install rktoolkit ----- \033[0m"
     \${APT_INSTALL} /packages/rktoolkit/*.deb
-
-    # 安装 ffmpeg，用于音频和视频处理
-    if [[ "$TARGET" == "gnome" ||  "$TARGET" == "xfce" ]];then
-        echo -e "\033[42;36m ------ Install ffmpeg ------- \033[0m"
-        \${APT_INSTALL} ffmpeg
-    fi
-
-    # 安装 mpv 播放器
-    echo -e "\033[42;36m ------- Install mpv --------- \033[0m"
-    apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install -y /packages/mpv/*.deb
 
     # 自动删除不再需要的软件包
     apt autoremove -y
@@ -344,6 +338,8 @@ cat << EOF | chroot $TARGET_ROOTFS_DIR
         echo "GNOME 的 GDM3 自动登录配置完成。"
         echo -e "\033[42;36m GNOME 的 GDM3 自动登录配置完成 \033[0m"
     fi
+    # 安装pulseaudio工具 和 nfs-kernel-server 
+    \${APT_INSTALL} pulseaudio nfs-kernel-server 
 
     # 为 X 预加载 libdrm-cursor 库
     sed -i "1aexport LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libdrm-cursor.so.1" /usr/bin/X
@@ -361,7 +357,6 @@ cat << EOF | chroot $TARGET_ROOTFS_DIR
     rm -rf /boot/*
 EOF
 
-
 # 解除挂载根文件系统
 umnt $TARGET_ROOTFS_DIR/
 
@@ -369,5 +364,5 @@ umnt $TARGET_ROOTFS_DIR/
 ./mk-image.sh $TARGET
 
 # 打包成压缩包的形式
-#echo -e "\033[42;36m ------- 压缩成xz包 ------ \033[0m"
-#XZ_OPT=-T0 tar -cpJf ubuntu-focal-$TARGET-arm64.tar.xz binary
+# echo -e "\033[42;36m ------- 压缩成xz包 ------ \033[0m"
+# XZ_OPT=-T0 tar -cpJf ubuntu-jammy-$TARGET-arm64.tar.xz binary

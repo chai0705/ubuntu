@@ -9,7 +9,7 @@ for rockchip platform.
 - 使用RK3568处理器的iTOP-RK3568板卡
 - 使用RK3588处理器的iTOP-RK3588板卡
 
-## 构建 Ubuntu20.04镜像（仅支持64bit）
+## 构建 Ubuntu22.04镜像（仅支持64bit）
 
 - lite：控制台版，无桌面
 - xfce：桌面版，使用xfce桌面套件
@@ -27,4 +27,3 @@ for rockchip platform.
 ```
 # 运行以下脚本，根据提示选择要构建处理器版本和ubuntu的版本
 ./mk-ubuntu-rootfs.sh
-```

@@ -4,10 +4,13 @@
 # 确保脚本在错误时退出
 set -e -o pipefail
 
-# 检查并尝试获取 root 权限。如果当前用户不是 root，提示并重新执行脚本。
-if [[ "${EUID}" != "0" ]]; then
-    echo -e "\033[42;36m 该脚本需要 root 权限，请切换为root用户或者使用sudo权限运行 \033[0m"
-    exit $?
+# 判断是否拥有root权限
+if [[ "${EUID}" == "0" ]]; then
+        :
+else
+       	echo -e "\033[47;36m This script requires root privileges, trying to use sudo \033[0m"
+        sudo "${0}" "$@"
+        exit $?
 fi
 
 # 定义日志文件路径
@@ -91,29 +94,29 @@ if [ ! -d $TARGET_ROOTFS_DIR ]; then
     mkdir -p $TARGET_ROOTFS_DIR
 
     # 如果 ubuntu-base 压缩包不存在，则下载相应的版本
-    if [ ! -e ubuntu-base-20.04.5-base-$ARCH.tar.gz ]; then
-        echo -e "\033[47;36m 下载 ubuntu-base-20.04.5-base-$ARCH.tar.gz \033[0m"
-        wget -c http://cdimage.ubuntu.com/ubuntu-base/releases/20.04/release/ubuntu-base-20.04.5-base-$ARCH.tar.gz
+    if [ ! -e ubuntu-base-22.04.4-base-$ARCH.tar.gz ]; then
+        echo "\033[36m wget ubuntu-base-22.04.4-base-"$ARCH".tar.gz \033[0m"
+        wget -c http://cdimage.ubuntu.com/ubuntu-base/releases/22.04/release/ubuntu-base-22.04.4-base-$ARCH.tar.gz
     fi
 
     # 解压下载的 ubuntu-base 压缩包到目标目录
-    tar -xzf ubuntu-base-20.04.5-base-$ARCH.tar.gz -C $TARGET_ROOTFS_DIR/
+    tar -xzf ubuntu-base-22.04.4-base-$ARCH.tar.gz -C $TARGET_ROOTFS_DIR/
 
     # 复制当前系统的 DNS 解析配置到目标根文件系统中
     cp -b /etc/resolv.conf $TARGET_ROOTFS_DIR/etc/resolv.conf
 	
     # 修改目标根文件系统的 apt 软件源
     cat <<-EOF > "$TARGET_ROOTFS_DIR"/etc/apt/sources.list
-        deb http://mirrors.ustc.edu.cn/ubuntu-ports/ focal main multiverse restricted universe
-        deb http://mirrors.ustc.edu.cn/ubuntu-ports/ focal-backports main multiverse restricted universe
-        deb http://mirrors.ustc.edu.cn/ubuntu-ports/ focal-proposed main multiverse restricted universe
-        deb http://mirrors.ustc.edu.cn/ubuntu-ports/ focal-security main multiverse restricted universe
-        deb http://mirrors.ustc.edu.cn/ubuntu-ports/ focal-updates main multiverse restricted universe
-        deb-src http://mirrors.ustc.edu.cn/ubuntu-ports/ focal main multiverse restricted universe
-        deb-src http://mirrors.ustc.edu.cn/ubuntu-ports/ focal-backports main multiverse restricted universe
-        deb-src http://mirrors.ustc.edu.cn/ubuntu-ports/ focal-proposed main multiverse restricted universe
-        deb-src http://mirrors.ustc.edu.cn/ubuntu-ports/ focal-security main multiverse restricted universe
-        deb-src http://mirrors.ustc.edu.cn/ubuntu-ports/ focal-updates main multiverse restricted universe
+        deb http://mirrors.ustc.edu.cn/ubuntu-ports/ jammy main multiverse restricted universe
+        deb http://mirrors.ustc.edu.cn/ubuntu-ports/ jammy-backports main multiverse restricted universe
+        deb http://mirrors.ustc.edu.cn/ubuntu-ports/ jammy-proposed main multiverse restricted universe
+        deb http://mirrors.ustc.edu.cn/ubuntu-ports/ jammy-security main multiverse restricted universe
+        deb http://mirrors.ustc.edu.cn/ubuntu-ports/ jammy-updates main multiverse restricted universe
+        deb-src http://mirrors.ustc.edu.cn/ubuntu-ports/ jammy main multiverse restricted universe
+        deb-src http://mirrors.ustc.edu.cn/ubuntu-ports/ jammy-backports main multiverse restricted universe
+        deb-src http://mirrors.ustc.edu.cn/ubuntu-ports/ jammy-proposed main multiverse restricted universe
+        deb-src http://mirrors.ustc.edu.cn/ubuntu-ports/ jammy-security main multiverse restricted universe
+        deb-src http://mirrors.ustc.edu.cn/ubuntu-ports/ jammy-updates main multiverse restricted universe
 	EOF
 
     # 根据系统架构，复制相应的 qemu 可执行文件，以便在 chroot 环境中运行
@@ -144,6 +147,7 @@ case "$TARGET" in
         ;;
     xfce)
         apt install -y xubuntu-core onboard rsyslog sudo dialog apt-utils ntp evtest udev
+        apt-get remove -fy gdm3 ubuntu-session
         repair_dpkg
         ;;
     lite)
@@ -155,7 +159,7 @@ esac
 \${APT_INSTALL} net-tools openssh-server ifupdown alsa-utils ntp network-manager gdb inetutils-ping libssl-dev \
     vsftpd tcpdump can-utils i2c-tools strace vim iperf3 ethtool netplan.io toilet htop pciutils usbutils curl \
     whiptail gnupg bc xinput gdisk parted gcc sox libsox-fmt-all gpiod libgpiod-dev python3-pip python3-libgpiod \
-    guvcview nfs-kernel-server
+    guvcview nfs-kernel-server 
 
 \${APT_INSTALL} ttf-wqy-zenhei xfonts-intl-chinese  # 安装中文字体
 
@@ -197,9 +201,6 @@ if [[ "$TARGET" == "gnome" || "$TARGET" == "xfce" ]]; then
 elif [ "$TARGET" == "lite" ]; then
     \${APT_INSTALL}  
 fi
-
-# 安装 Python 库和工具
-pip3 install python-periphery Adafruit-Blinka -i https://mirrors.aliyun.com/pypi/simple/
 
 HOST=topeet  # 设置主机名
 
