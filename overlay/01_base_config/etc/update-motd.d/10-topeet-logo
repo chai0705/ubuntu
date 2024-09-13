@@ -18,8 +18,6 @@ if [ "$BOARD" == "rk3588" ]; then
 elif [ "$BOARD" == "rk3568" ]; then
     # 针对 rk3568 的命令
     toilet -f standard -F metal $(echo iTOP-RK3568)
-    echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor
-    echo performance > /sys/devices/platform/fde60000.gpu/devfreq/fde60000.gpu/governor
 
 elif [ "$BOARD" == "rk3562" ]; then
     # 针对 rk3562 的命令
