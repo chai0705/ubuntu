@@ -208,7 +208,7 @@ cat << EOF | chroot $TARGET_ROOTFS_DIR
     export LC_ALL=C.UTF-8
 
     # 更新并升级系统包
-    apt-get update && apt-get upgrade -y
+    apt-get update
 
     # 修复权限问题，确保某些系统文件的正确权限
     chmod o+x /usr/lib/dbus-1.0/dbus-daemon-launch-helper
