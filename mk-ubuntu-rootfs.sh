@@ -250,12 +250,10 @@ cat << EOF | chroot $TARGET_ROOTFS_DIR
     echo -e "\033[42;36m ----------- RGA  ----------- \033[0m"
     \${APT_INSTALL} /packages/rga2/*.deb
 
-    # 配置视频相关的工具和插件，安装 MPP（多媒体处理）和 GStreamer 插件
     echo -e "\033[42;36m ------ Setup Video---------- \033[0m"
     \${APT_INSTALL} gstreamer1.0-plugins-bad gstreamer1.0-plugins-base gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-plugins-base-apps qtmultimedia5-examples gstreamer1.0-plugins-good gstreamer1.0-libav gstreamer1.0-plugins-ugly
     \${APT_INSTALL} /packages/mpp/*
     \${APT_INSTALL} /packages/gst-rkmpp/*.deb
-
 
     # 安装和配置摄像头相关的工具
     echo -e "\033[42;36m ----- Install Camera ----- - \033[0m"
