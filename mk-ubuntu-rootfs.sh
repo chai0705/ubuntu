@@ -34,7 +34,7 @@ select_soc() {
         esac
     done
     echo -e "\033[42;36m 设置 SOC=$SOC...... \033[0m"
-    
+
     # 设置默认架构为 arm64
     ARCH="arm64" && echo -e "\033[42;36m 设置默认 ARCH=arm64...... \033[0m"
 }
@@ -217,13 +217,13 @@ cat << EOF | chroot $TARGET_ROOTFS_DIR
     # 设置非交互模式安装软件包，防止出现交互提示
     export DEBIAN_FRONTEND=noninteractive
     export APT_INSTALL="apt-get install -fy --allow-downgrades"
-    
+
     \${APT_INSTALL} u-boot-tools edid-decode logrotate
     if [[ "$TARGET" == "gnome" ]]; then
         \${APT_INSTALL} gdisk blueman
 	apt purge -y gnome-initial-setup
     elif [[ "$TARGET" == "xfce" ]]; then
-        apt-get remove -y gnome-bluetooth 
+        apt-get remove -y gnome-bluetooth
         \${APT_INSTALL} bluez bluez-tools blueman pulseaudio
     elif [ "$TARGET" == "lite" ];then
         \${APT_INSTALL} bluez bluez-tools blueman
@@ -252,9 +252,10 @@ cat << EOF | chroot $TARGET_ROOTFS_DIR
 
     # 配置视频相关的工具和插件，安装 MPP（多媒体处理）和 GStreamer 插件
     echo -e "\033[42;36m ------ Setup Video---------- \033[0m"
-    \${APT_INSTALL} gstreamer1.0-plugins-bad gstreamer1.0-plugins-base gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-plugins-base-apps qtmultimedia5-examples
+    \${APT_INSTALL} gstreamer1.0-plugins-bad gstreamer1.0-plugins-base gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-plugins-base-apps qtmultimedia5-examples gstreamer1.0-plugins-good gstreamer1.0-libav gstreamer1.0-plugins-ugly
     \${APT_INSTALL} /packages/mpp/*
     \${APT_INSTALL} /packages/gst-rkmpp/*.deb
+
 
     # 安装和配置摄像头相关的工具
     echo -e "\033[42;36m ----- Install Camera ----- - \033[0m"
@@ -282,7 +283,7 @@ cat << EOF | chroot $TARGET_ROOTFS_DIR
     if [ ! -f "/packages/chromium/chromium-x11_91.0.4472.164_arm64.deb" ]; then
         cat "/packages/chromium/chromium-x11_91.0.4472.164_arm64_part_aa" \
             "/packages/chromium/chromium-x11_91.0.4472.164_arm64_part_ab" \
-            > "/packages/chromium/chromium-x11_91.0.4472.164_arm64.deb" 
+            > "/packages/chromium/chromium-x11_91.0.4472.164_arm64.deb"
     fi
     \${APT_INSTALL} /packages/chromium/*.deb
 
@@ -313,7 +314,7 @@ cat << EOF | chroot $TARGET_ROOTFS_DIR
     \${APT_INSTALL} /packages/rktoolkit/*.deb
 
     # 自动删除不再需要的软件包
-    apt autoremove -y
+    # apt autoremove -y
 
     # 将所有可升级的软件包设置为 hold 状态，防止自动升级
     apt list --upgradable | cut -d/ -f1 | xargs apt-mark hold
@@ -334,12 +335,12 @@ cat << EOF | chroot $TARGET_ROOTFS_DIR
         sudo sed -i 's/#  AutomaticLogin = user1/AutomaticLogin = topeet/' /etc/gdm3/custom.conf
 
         # 确保 WaylandEnable 被设置为 false，禁用 Wayland
-        sudo sed -i 's/#WaylandEnable=false/WaylandEnable=false/' /etc/gdm3/custom.conf      
+        sudo sed -i 's/#WaylandEnable=false/WaylandEnable=false/' /etc/gdm3/custom.conf
         echo "GNOME 的 GDM3 自动登录配置完成。"
         echo -e "\033[42;36m GNOME 的 GDM3 自动登录配置完成 \033[0m"
     fi
-    # 安装pulseaudio工具 和 nfs-kernel-server 
-    \${APT_INSTALL} pulseaudio nfs-kernel-server 
+    # 安装pulseaudio工具 和 nfs-kernel-server
+    \${APT_INSTALL} pulseaudio nfs-kernel-server
 
     # 为 X 预加载 libdrm-cursor 库
     sed -i "1aexport LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libdrm-cursor.so.1" /usr/bin/X
