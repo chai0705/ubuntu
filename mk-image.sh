@@ -54,7 +54,7 @@ function fixup_part()
 		${TARGET_ROOTFS_DIR}/etc/fstab
 
 	# 创建挂载点目录
-	mkdir -p ${TARGET_ROOTFS_DIR}/${MOUNT} 
+	mkdir -p ${TARGET_ROOTFS_DIR}/${MOUNT}
 }
 
 # 修正/etc/fstab文件
@@ -111,7 +111,7 @@ if [ -e ${ROOTFSIMAGE} ]; then
 fi
 
 # 添加构建信息
-add_build_info 
+add_build_info
 
 # 修正 /etc/fstab 文件（如果存在）
 [ -f ${TARGET_ROOTFS_DIR}/etc/fstab ] && fixup_fstab
@@ -124,6 +124,11 @@ dd if=/dev/zero of=${ROOTFSIMAGE} bs=1M count=0 seek=${IMAGE_SIZE_MB}
 
 # 使用mkfs.ext4命令将内容填充到镜像文件中
 sudo mkfs.ext4 -d ${TARGET_ROOTFS_DIR} ${ROOTFSIMAGE}
+
+# 生成软链接
+mkdir -p ../rockdev/
+rm -rf  ../rockdev/rootfs.ext4
+ln -s ../debian/${ROOTFSIMAGE} ../rockdev/rootfs.ext4
 
 # 输出根文件系统镜像文件的信息
 echo "根文件系统镜像: ${ROOTFSIMAGE}"
