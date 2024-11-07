@@ -22,6 +22,7 @@ select_soc() {
         echo -e "\033[42;36m [1] rk3562 \033[0m"
         echo -e "\033[42;36m [2] rk3568 \033[0m"
         echo -e "\033[42;36m [3] rk3588/rk3588s \033[0m"
+		echo -e "\033[42;36m [4] rk3576 \033[0m"
         echo -e "\033[42;36m --------------------------------------------------------- \033[0m"
         read -p "选择: " input
 
@@ -30,6 +31,7 @@ select_soc() {
             1) SOC=rk3562; break;;  # 选择rk3562
             2) SOC=rk3568; break;;  # 选择rk3568
             3) SOC=rk3588; break;;  # 选择rk3588
+			4) SOC=rk3576; break;;  # 选择rk3576
             *) echo -e "\033[42;36m 无效输入，请重试。 \033[0m";;  # 输入错误提示
         esac
     done
@@ -79,6 +81,11 @@ install_packages() {
             MALI=valhall-g610-g13p0
             ISP=rkaiq_rk3588
             BOARD_NAME="iTOP-RK3588"
+            ;;
+        rk3576)
+            MALI=bifrost-g52-g13p0
+            ISP=rkaiq_rk3576
+            BOARD_NAME="iTOP-RK3576"
             ;;
     esac
 }
