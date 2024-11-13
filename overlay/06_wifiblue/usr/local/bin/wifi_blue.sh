@@ -25,6 +25,13 @@ elif [ "$BOARD" == "rk3562" ]; then
     rfkill unblock bluetooth
     hciconfig hci0 up
 
+elif [ "$BOARD" == "rk3576" ]; then
+    # 针对 rk3576 的命令
+	insmod /usr/local/modules/rk3576/RTL8733BU.ko
+	insmod /usr/local/modules/rk3576/rtk_btusb.ko
+	rfkill unblock bluetooth
+	hciconfig hci0 up
+
 else
     echo "未知的 BOARD 值: $BOARD"
 fi
